@@ -1,43 +1,62 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Button,
-  Alert,
-} from 'react-native';
+import { Image, StyleSheet, Text, View, ScrollView, Alert } from 'react-native';
 
 import { MEALS } from '../data/dummy-data';
 
 import MealDetail from '../components/MealDetails';
 import Subtitle from '../components/MealDetail/Subtitle';
 import List from '../components/MealDetail/List';
-import { useLayoutEffect } from 'react';
+import { useContext, useLayoutEffect } from 'react';
 import IconButton from '../components/IconButton';
+import { useDispatch, useSelector } from 'react-redux';
+
+//Context
+// import { FavoritesContext } from '../store/context/favorites-context';
+
+//Redux Actions
+import { addFavorite, removeFavorite } from '../store/redux/favorites';
 
 function MealDetailScreen({ route, navigation }) {
+  // const favoriteMealsContext = useContext(FavoritesContext);
+
+  const favoriteMealIds = useSelector((state) => state.favoriteMeals.ids);
+
+  const dispatch = useDispatch();
+
   const mealID = route.params.mealId;
 
   const selectedMeal = MEALS.find((meal) => meal.id === mealID);
 
-  function headerButtonPressHandler() {
-    Alert.alert('Favorite', 'This meal has been added to your favorites', [
-      { text: 'OK' },
-    ]);
+  const mealIsFavorite = favoriteMealIds.includes(mealID);
+
+  function changeFavoritesStatusHandler() {
+    if (mealIsFavorite) {
+      // favoriteMealsContext.removeFavorite(mealID);
+      dispatch(removeFavorite(mealID));
+      Alert.alert(
+        'Favorite',
+        'This meal has been removed from your favorites',
+        [{ text: 'OK' }]
+      );
+    } else {
+      // favoriteMealsContext.addFavorite(mealID);
+      dispatch(addFavorite(mealID));
+      Alert.alert('Favorite', 'This meal has been added to your favorites', [
+        { text: 'OK' },
+      ]);
+    }
   }
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <IconButton
-          icon={'ios-star-outline'}
+          icon={mealIsFavorite ? 'ios-star' : 'ios-star-outline'}
           color={'white'}
-          onPress={headerButtonPressHandler}
+          onPress={changeFavoritesStatusHandler}
         />
       ),
     });
-  }, [navigation]);
+  }, [navigation, changeFavoritesStatusHandler]);
 
   return (
     <ScrollView style={styles.rootContainer}>
